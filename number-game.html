@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number & Alphabet Sequence Challenge</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2A2A2A;
+            --accent-color: #00FF88;
+            --text-color: #FFFFFF;
+            --card-bg: #363636;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        .navbar {
+            background-color: rgba(42, 42, 42, 0.95);
+            padding: 1rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .nav-links a {
+            color: var(--text-color);
+            text-decoration: none;
+            margin-left: 2rem;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-color);
+        }
+
+        .sequence-container {
+            text-align: center;
+            margin-top: 100px;
+        }
+
+        .sequence-box {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background-color: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 10px;
+            display: inline-block;
+            min-width: 150px;
+            color: var(--accent-color);
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .hidden {
+            opacity: 0;
+        }
+
+        .input-box {
+            margin-top: 20px;
+            padding: 10px;
+            font-size: 1.5rem;
+            border-radius: 8px;
+            border: none;
+            text-align: center;
+            width: 200px;
+        }
+
+        .submit-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1.5rem;
+            background-color: var(--accent-color);
+            color: var(--primary-color);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .submit-btn:hover {
+            background-color: #00CC6A;
+        }
+
+        .score-box {
+            margin-top: 20px;
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo">AthletePro</a>
+            <div class="nav-links">
+                <a href="#">Home</a>
+                <a href="#">Reflex Tester</a>
+                <a href="#">Number Sequence</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="sequence-container">
+        <h1>Number & Alphabet Sequence Challenge</h1>
+        <p>Memorize the sequence and input it correctly!</p>
+        
+        <div id="sequence-box" class="sequence-box">---</div>
+        
+        <input type="text" id="user-input" class="input-box" placeholder="Enter sequence" disabled>
+        <button class="submit-btn" onclick="checkSequence()" disabled>Submit</button>
+        
+        <p id="score-box" class="score-box">Score: 0</p>
+    </section>
+
+    <script>
+        let sequence = "";
+        let score = 0;
+
+        // Function to generate sequence with numbers and alphabets
+        function generateSequence() {
+            let length = Math.min(3 + Math.floor(score / 2), 15); // Sequence length increases with score
+            sequence = "";
+            let characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'; // Numbers and letters
+
+            // Generate random sequence
+            for (let i = 0; i < length; i++) {
+                let randomChar = characters.charAt(Math.floor(Math.random() * characters.length));
+                sequence += randomChar;
+            }
+
+            // Display the sequence briefly
+            document.getElementById("sequence-box").innerText = sequence;
+
+            // Disable input while sequence is being shown
+            document.getElementById("user-input").disabled = true;
+            document.querySelector(".submit-btn").disabled = true;
+
+            setTimeout(() => {
+                document.getElementById("sequence-box").innerText = "???"; // Hide sequence after showing it
+                // Enable input after sequence is hidden
+                document.getElementById("user-input").disabled = false;
+                document.querySelector(".submit-btn").disabled = false;
+            }, 2000 + length * 300); // Display sequence for longer with more characters
+        }
+
+        // Function to check user input
+        function checkSequence() {
+            let userInput = document.getElementById("user-input").value;
+            
+            if (userInput === sequence) {
+                score++;
+                alert("✅ Correct! Next Level.");
+            } else {
+                score = 0;
+                alert("❌ Incorrect! Try Again.");
+            }
+
+            document.getElementById("score-box").innerText = "Score: " + score;
+            document.getElementById("user-input").value = "";
+            generateSequence();
+        }
+
+        // Initialize game with first sequence
+        window.onload = generateSequence;
+    </script>
+
+</body>
+</html>

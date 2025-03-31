@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Athlete File Manager</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2A2A2A;
+            --accent-color: #00FF88;
+            --text-color: #FFFFFF;
+            --card-bg: #363636;
+        }
+
+        body {
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .navbar {
+            background-color: rgba(42, 42, 42, 0.95);
+            padding: 1rem;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .nav-container a {
+            text-decoration: none;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            margin: 0 1rem;
+        }
+
+        .nav-container a:hover {
+            color: var(--accent-color);
+        }
+
+        .file-upload {
+            margin-top: 100px;
+            padding: 2rem;
+        }
+
+        input[type="file"] {
+            padding: 0.8rem;
+            border-radius: 5px;
+            border: none;
+            font-size: 1rem;
+            background: var(--card-bg);
+            color: var(--text-color);
+            margin: 10px;
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: var(--primary-color);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 5px;
+            margin: 10px;
+        }
+
+        button:hover {
+            background-color: #00CC6A;
+        }
+
+        .file-list {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .file-card {
+            background: var(--card-bg);
+            padding: 15px;
+            margin: 10px;
+            border-radius: 8px;
+            width: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .file-card button {
+            background: red;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-left: 5px;
+        }
+
+        .viewer-container {
+            width: 80%;
+            max-height: 500px;
+            overflow: auto;
+            border: 1px solid var(--text-color);
+            margin: 20px auto;
+            padding: 10px;
+            background: var(--card-bg);
+            display: none;
+        }
+
+        #pdf-canvas {
+            width: 100%;
+            height: auto;
+        }
+
+        #docx-viewer {
+            background: white;
+            color: black;
+            padding: 20px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="#">Upload Files</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="file-upload">
+        <h1>Upload Your Training Files</h1>
+        <input type="file" id="file-input">
+        <button onclick="uploadFile()">Upload</button>
+        <h2>Uploaded Files</h2>
+        <div id="file-list" class="file-list"></div>
+    </section>
+
+    <div id="viewer-container" class="viewer-container">
+        <canvas id="pdf-canvas" style="display:none;"></canvas>
+        <div id="docx-viewer" style="display:none;"></div>
+        <img id="image-viewer" style="display:none; max-width: 100%;">
+        <video id="video-viewer" controls style="display:none; width: 100%;"></video>
+        <audio id="audio-viewer" controls style="display:none; width: 100%;"></audio>
+    </div>
+
+    <script>
+        // Initialize on page load
+        document.addEventListener("DOMContentLoaded", function () {
+            loadFiles();
+        });
+
+        // Convert ArrayBuffer to Base64
+        function arrayBufferToBase64(buffer) {
+            let binary = '';
+            const bytes = new Uint8Array(buffer);
+            for (let i = 0; i < bytes.byteLength; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return btoa(binary);
+        }
+
+        // Convert Base64 to ArrayBuffer
+        function base64ToArrayBuffer(base64) {
+            const binaryString = atob(base64);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        function uploadFile() {
+            const fileInput = document.getElementById('file-input');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select a file to upload.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Data = arrayBufferToBase64(e.target.result);
+                const fileData = {
+                    name: file.name,
+                    data: base64Data,
+                    type: file.type
+                };
+
+                let files = JSON.parse(localStorage.getItem('athleteFiles')) || [];
+                files.push(fileData);
+                localStorage.setItem('athleteFiles', JSON.stringify(files));
+                loadFiles();
+                fileInput.value = ''; // Clear input
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function loadFiles() {
+            const fileList = document.getElementById('file-list');
+            fileList.innerHTML = '';
+            const files = JSON.parse(localStorage.getItem('athleteFiles')) || [];
+
+            files.forEach((file, index) => {
+                const fileCard = document.createElement('div');
+                fileCard.className = 'file-card';
+                fileCard.innerHTML = `
+                    <span>${file.name}</span>
+                    <div>
+                        <button onclick="deleteFile(${index})">Delete</button>
+                        <button onclick="viewFile(${index})">View</button>
+                    </div>
+                `;
+                fileList.appendChild(fileCard);
+            });
+        }
+
+        function deleteFile(index) {
+            let files = JSON.parse(localStorage.getItem('athleteFiles')) || [];
+            files.splice(index, 1);
+            localStorage.setItem('athleteFiles', JSON.stringify(files));
+            loadFiles();
+        }
+
+        async function viewFile(index) {
+            const files = JSON.parse(localStorage.getItem('athleteFiles')) || [];
+            const file = files[index];
+            const viewer = document.getElementById('viewer-container');
+            viewer.style.display = 'block';
+
+            // Hide all viewers first
+            document.querySelectorAll('#viewer-container > *').forEach(el => {
+                el.style.display = 'none';
+            });
+
+            try {
+                if (file.type === 'application/pdf') {
+                    const pdfContainer = document.getElementById('pdf-canvas');
+                    const arrayBuffer = base64ToArrayBuffer(file.data);
+                    
+                    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+                    const pdf = await loadingTask.promise;
+                    const page = await pdf.getPage(1);
+                    const viewport = page.getViewport({ scale: 1.5 });
+                    
+                    const canvas = document.getElementById('pdf-canvas');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    
+                    const renderContext = { canvasContext: canvas.getContext('2d'), viewport };
+                    await page.render(renderContext).promise;
+                    pdfContainer.style.display = 'block';
+
+                } else if (file.type.startsWith('image/')) {
+                    const imgViewer = document.getElementById('image-viewer');
+                    imgViewer.src = `data:${file.type};base64,${file.data}`;
+                    imgViewer.style.display = 'block';
+
+                } else if (file.type.startsWith('video/')) {
+                    const videoViewer = document.getElementById('video-viewer');
+                    videoViewer.src = `data:${file.type};base64,${file.data}`;
+                    videoViewer.style.display = 'block';
+
+                } else if (file.type.startsWith('audio/')) {
+                    const audioViewer = document.getElementById('audio-viewer');
+                    audioViewer.src = `data:${file.type};base64,${file.data}`;
+                    audioViewer.style.display = 'block';
+
+                } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+                    const docxViewer = document.getElementById('docx-viewer');
+                    const arrayBuffer = base64ToArrayBuffer(file.data);
+                    
+                    const result = await mammoth.convertToHtml({ arrayBuffer });
+                    docxViewer.innerHTML = result.value;
+                    docxViewer.style.display = 'block';
+
+                } else {
+                    alert('Unsupported file type: ' + file.type);
+                }
+            } catch (error) {
+                console.error('Error viewing file:', error);
+                alert('Error viewing file. Please check the console for details.');
+            }
+        }
+    </script>
+</body>
+</html>

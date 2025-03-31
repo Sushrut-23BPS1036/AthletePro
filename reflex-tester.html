@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Reflex Tester</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        :root {
+            --primary-color: #2A2A2A;
+            --accent-color: #00FF88;
+            --text-color: #FFFFFF;
+            --card-bg: #363636;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .reflex-container {
+            padding: 2rem;
+            max-width: 800px;
+            margin: 5rem auto;
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: var(--accent-color);
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .lights {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 2rem 0;
+        }
+
+        .light {
+            width: 60px;
+            height: 60px;
+            background: #222;
+            border-radius: 50%;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+            transition: background 0.3s ease-in-out;
+        }
+
+        .active {
+            background: red !important;
+        }
+
+        .green {
+            background: var(--accent-color) !important;
+        }
+
+        #results {
+            font-size: 1.2rem;
+            margin-top: 1.5rem;
+            font-weight: bold;
+        }
+
+        .project-link {
+            display: inline-block;
+            margin-top: 1.5rem;
+            padding: 0.8rem 1.5rem;
+            background-color: var(--accent-color);
+            color: var(--primary-color);
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .project-link:hover {
+            background-color: #00CC6A;
+        }
+
+        @media (max-width: 768px) {
+            .reflex-container {
+                padding: 1.5rem;
+            }
+
+            .light {
+                width: 50px;
+                height: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="reflex-container">
+        <h1>Reflex Tester</h1>
+        <p>Click anywhere when the lights turn green</p>
+        <div class="lights">
+            <div class="light" id="light1"></div>
+            <div class="light" id="light2"></div>
+            <div class="light" id="light3"></div>
+            <div class="light" id="light4"></div>
+            <div class="light" id="light5"></div>
+        </div>
+        <div id="results">Reaction Time: 0ms | Average: 0ms</div>
+        <button onclick="startTest()" class="project-link">Start Test</button>
+    </div>
+
+    <script>
+        let startTime;
+        let reactionTimes = [];
+        let clickable = false;
+
+        function startTest() {
+            const lights = document.querySelectorAll('.light');
+            lights.forEach(light => light.classList.remove('active', 'green'));
+            document.getElementById('results').textContent = "Waiting...";
+            clickable = false;
+            
+            let delay = 500;
+            lights.forEach((light, index) => {
+                setTimeout(() => {
+                    light.classList.add('active');
+                }, delay * (index + 1));
+            });
+            
+            setTimeout(() => {
+                lights.forEach(light => light.classList.remove('active'));
+                lights.forEach(light => light.classList.add('green'));
+                startTime = Date.now();
+                clickable = true;
+            }, delay * (lights.length + 1) + Math.random() * 2000);
+        }
+
+        document.body.addEventListener('click', () => {
+            if (!clickable) return;
+            const reactionTime = Date.now() - startTime;
+            reactionTimes.push(reactionTime);
+            const average = reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length;
+            document.getElementById('results').textContent = 
+                `Reaction Time: ${reactionTime}ms | Average: ${average.toFixed(1)}ms`;
+            clickable = false;
+        });
+    </script>
+</body>
+</html>

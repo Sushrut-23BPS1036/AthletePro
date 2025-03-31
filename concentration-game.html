@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concentration Game</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .game-container {
+            max-width: 600px;
+            margin: 5rem auto;
+            text-align: center;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 2rem;
+        }
+
+        .card {
+            width: 100px;
+            height: 120px;
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .card.flipped {
+            background-color: var(--accent-color);
+            color: var(--primary-color);
+        }
+
+        .stats {
+            margin-top: 2rem;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo">Concentration Game</a>
+            <div class="nav-links">
+                <a href="#">Home</a>
+                <a href="#">Games</a>
+                <a href="#">About</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-container">
+        <h1>Memory Match</h1>
+        <div class="game-board" id="gameBoard"></div>
+        <div class="stats">
+            <p>Moves: <span id="moves">0</span></p>
+            <p>Matches: <span id="matches">0</span>/8</p>
+        </div>
+        <button class="project-link" onclick="startGame()">Restart Game</button>
+    </div>
+
+    <script>
+        const symbols = ["🍎", "🍌", "🍒", "🍉", "🍇", "🥝", "🍊", "🍍"];
+        let cards = [...symbols, ...symbols];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let moves = 0;
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                let j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function createBoard() {
+            const board = document.getElementById("gameBoard");
+            board.innerHTML = "";
+            shuffle(cards);
+
+            cards.forEach((symbol, index) => {
+                const card = document.createElement("div");
+                card.classList.add("card");
+                card.dataset.symbol = symbol;
+                card.dataset.index = index;
+                card.addEventListener("click", flipCard);
+                board.appendChild(card);
+            });
+        }
+
+        function flipCard() {
+            if (flippedCards.length < 2 && !this.classList.contains("flipped")) {
+                this.classList.add("flipped");
+                this.textContent = this.dataset.symbol;
+                flippedCards.push(this);
+
+                if (flippedCards.length === 2) {
+                    setTimeout(checkMatch, 800);
+                }
+            }
+        }
+
+        function checkMatch() {
+            moves++;
+            document.getElementById("moves").textContent = moves;
+
+            const [card1, card2] = flippedCards;
+            if (card1.dataset.symbol === card2.dataset.symbol) {
+                matchedPairs++;
+                document.getElementById("matches").textContent = matchedPairs;
+                flippedCards = [];
+
+                if (matchedPairs === symbols.length) {
+                    setTimeout(() => alert("🎉 You won!"), 300);
+                }
+            } else {
+                card1.classList.remove("flipped");
+                card2.classList.remove("flipped");
+                card1.textContent = "";
+                card2.textContent = "";
+                flippedCards = [];
+            }
+        }
+
+        function startGame() {
+            moves = 0;
+            matchedPairs = 0;
+            document.getElementById("moves").textContent = moves;
+            document.getElementById("matches").textContent = matchedPairs;
+            flippedCards = [];
+            createBoard();
+        }
+
+        startGame();
+    </script>
+
+</body>
+</html>
